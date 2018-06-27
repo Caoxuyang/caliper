@@ -88,7 +88,7 @@ class Client{
         let conf = require(config);
         this.config = conf.test.clients;
         this.results = [];                        // output of recent test round
-        this.updates = {id:0, data:[]};           // contains txUpdated messages
+        this.updates = {id:0, data:[]};           // contains   messages
     }
 
     /**
@@ -132,7 +132,7 @@ class Client{
     *            };
     * @param {JSON} message start message
     * @param {Array} clientArgs each element of the array contains arguments that should be passed to corresponding test client
-    * @param {Object} finishCB callback after the test finished
+    * @param {Object} finishCB callback after the test finished, the processResult function
     * @param {any} finishArgs arguments that should be passed to finishCB, the callback is invoke as finishCB(this.results, finshArgs)
     * @return {Promise} promise object
     */
@@ -154,6 +154,8 @@ class Client{
         return p.then(()=>{
             return finishCB(this.results, finishArgs);
         }).then(()=>{
+            //Didn't succeed to enter here.
+            //console.log(1231231);
             return Promise.resolve();
         }).catch((err)=>{
             return Promise.reject(err);

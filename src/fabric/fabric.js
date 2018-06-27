@@ -27,6 +27,7 @@ class Fabric extends BlockchainInterface{
      */
     constructor(config_path) {
         super(config_path);
+        configPath = config_path;
     }
 
     /**

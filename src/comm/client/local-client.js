@@ -27,18 +27,18 @@ let txUpdateTime = 1000;
 function txUpdate() {
     let newNum = txNum - txLastNum;
     txLastNum += newNum;
-
+    //console.log("I'm in  the local-client txUpdate function and wants to see what's in the results array: " + results);
     let newResults =  results.slice(txUpdateTail);
     txUpdateTail += newResults.length;
     if(newResults.length === 0 && newNum === 0) {
         return;
     }
-
     let newStats;
     if(newResults.length === 0) {
         newStats = bc.createNullDefaultTxStats();
     }
     else {
+        //console.log(blockchain.getDefaultTxStats(newResults, false));
         newStats = blockchain.getDefaultTxStats(newResults, false);
     }
     process.send({type: 'txUpdated', data: {submitted: newNum, committed: newStats}});
@@ -76,6 +76,23 @@ function beforeTest() {
 function submitCallback(count) {
     txNum += count;
 }
+/*
+//async recursive send tx
+function generateRunPromise(cb, rateControl, start, txNum, results)
+{
+    return cb.run().then((result, err)=>{
+        addResult(result);
+        return rateControl.applyRateControl(start, txNum, results);
+    }).catch((err) => {
+        if (err) {
+            console.error(err);
+            console.error("Retry send tx.");
+            //TODO here needs a retry control, in case of stack overflow
+            return generateRunPromise(cb, rateControl, start, txNum, results);
+        }
+    });
+}
+*/
 
 /**
  * Perform test with specified number of transactions
@@ -93,14 +110,33 @@ async function runFixedNumber(msg, cb, context) {
     const start = Date.now();
 
     let promises = [];
+
     while(txNum < msg.numb) {
-        promises.push(cb.run().then((result) => {
+        promises.push(new Promise((res, rej)=>{
+            cb.run().then((result, err)=>{
+                addResult(result);
+                res(result);
+                // If I put this inside, I can't control the rate
+                //return rateControl.applyRateControl(start, txNum, results);
+            }).catch((err) => {
+                console.error(err);
+                console.error("send tx failed in runFixedNumber function");
+                rej(err);
+                //TODO I think here needs a retry or retry control, in case of stack overflow
+            })
+        } ));
+        await rateControl.applyRateControl(start, txNum, results);
+        /*
+        promises.push((await cb.run()).then((result) => {
+            console.log(result);
             addResult(result);
             return Promise.resolve();
         }));
-        await rateControl.applyRateControl(start, txNum, results);
+        */
+        //console.log("What's the parameters " + start + " " + txNum + " " + results);
+        
     }
-
+    //console.log("start promises, ", promises.length);
     await Promise.all(promises);
     await rateControl.end();
     return await blockchain.releaseContext(context);
@@ -142,10 +178,8 @@ async function runDuration(msg, cb, context) {
  * @return {Promise} promise object
  */
 function doTest(msg) {
-    log('doTest() with:', msg);
     let cb = require(path.join(__dirname, '../../..', msg.cb));
     blockchain = new bc(path.join(__dirname, '../../..', msg.config));
-
     beforeTest();
     // start an interval to report results repeatedly
     let txUpdateInter = setInterval(txUpdate, txUpdateTime);
@@ -214,6 +248,7 @@ process.on('message', function(message) {
         try {
             switch(message.type) {
             case 'test': {
+                //console.log(message);
                 let result;
                 doTest(message).then((output) => {
                     result = output;
@@ -229,6 +264,7 @@ process.on('message', function(message) {
             }
         }
         catch(err) {
+            
             process.send({type: 'error', data: err});
         }
     }

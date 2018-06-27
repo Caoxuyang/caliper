@@ -44,6 +44,7 @@ class FixedRate extends RateInterface {
         const tps = this.options.tps;
         const tpsPerClient = msg.totalClients ? (tps / msg.totalClients) : tps;
         this.sleepTime = (tpsPerClient > 0) ? 1000/tpsPerClient : 0;
+        //console.log(msg,tps,tpsPerClient,this.sleepTime);
     }
 
     /**
@@ -59,6 +60,7 @@ class FixedRate extends RateInterface {
             return Promise.resolve();
         }
         let diff = (this.sleepTime * idx - (Date.now() - start));
+        console.log(idx,diff);
         if( diff > 5) {
             return Sleep(diff);
         }

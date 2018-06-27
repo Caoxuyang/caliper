@@ -38,6 +38,11 @@ class Blockchain {
             this.bcType = 'composer';
             this.bcObj = new composer(configPath);
         }
+        else if(config.hasOwnProperty('parity')) {
+            let parity = require('../parity/parity.js');
+            this.bcType = 'parity';
+            this.bcObj = new parity(configPath);
+        }
         else {
             this.bcType = 'unknown';
             throw new Error('Unknown blockchain config file ' + configPath);
@@ -210,7 +215,7 @@ class Blockchain {
                 fail++;
             }
         }
-
+        // Time is not implemented
         let stats = {
             'succ' : succ,
             'fail' : fail,

@@ -234,7 +234,6 @@ function defaultTest(args, clientArgs, final) {
                 round++;
                 testIdx++;
                 demo.startWatch(client);
-
                 return client.startTest(item, clientArgs, processResult, testLabel).then( () => {
                     demo.pauseWatch();
                     t.pass('passed \'' + testLabel + '\' testing');
@@ -311,7 +310,6 @@ module.exports.run = function(configFile, networkFile) {
             }).catch( (err) => {
                 log('could not start monitor, ' + (err.stack ? err.stack : err));
             });
-
             let allTests  = require(absConfigFile).test.rounds;
             let testIdx   = 0;
             let testNum   = allTests.length;

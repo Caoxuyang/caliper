@@ -1,0 +1,12 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\src",
+    "\\src\\comm",
+    "\\src\\comm\\client",
+    "\\src\\comm\\rate-control",
+    "\\src\\comm\\template"
+  ],
+  "SelectedNode": "\\src\\comm\\client\\local-client.js",
+  "PreviewInSolutionExplorer": false
+}

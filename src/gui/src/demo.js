@@ -127,10 +127,10 @@ function demoRefreshData(updates) {
     demoRefreshX();
 
    // if(started) {
-        console.log('[Transaction Info] - Submitted: ' + demoData.summary.txSub
-        + ' Succ: ' + demoData.summary.txSucc
-        + ' Fail:' +  demoData.summary.txFail
-        + ' Unfinished:' + (demoData.summary.txSub - demoData.summary.txSucc - demoData.summary.txFail));
+    console.log('[Transaction Info] - Submitted: ' + demoData.summary.txSub
+    + ' Succ: ' + demoData.summary.txSucc
+    + ' Fail:' +  demoData.summary.txFail
+    + ' Unfinished:' + (demoData.summary.txSub - demoData.summary.txSucc - demoData.summary.txFail));
    // }
 
     var fs = require('fs');
