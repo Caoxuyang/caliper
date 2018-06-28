@@ -139,6 +139,7 @@ async function runFixedNumber(msg, cb, context) {
     //console.log("start promises, ", promises.length);
     await Promise.all(promises);
     await rateControl.end();
+    //cb.end();
     return await blockchain.releaseContext(context);
 }
 

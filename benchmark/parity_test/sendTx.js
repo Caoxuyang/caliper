@@ -2,7 +2,7 @@
 const Web3 = require('web3');
 const util_parity = require('../../src/parity/util.js');
 const config = require('./parity.json');
-const ethereumjs = require('ethereumjs-tx');
+const Tx = require('ethereumjs-tx');
 module.exports.info  = 'sending eth between accounts';
 
 let bc, contx;
@@ -54,6 +54,14 @@ function sendTransactionAsync(transactionObject) {
         });
     });
 }
+
+function sendSignedTransactionAsync(transactionObject) {
+    return new Promise((res, rej) => {
+        web3.eth.sendSignedTransaction(transactionObject, function(err, transactionHash) {
+            !err ? res(transactionHash) : rej(err);
+        });
+    })
+}
 /*
 function getTransactionAsync(hashString) {
     return new Promise((res, rej) => {
@@ -64,6 +72,11 @@ function getTransactionAsync(hashString) {
 }
 */
 
+
+
+/**
+ *  sendTransaction version run
+ */
 module.exports.run = async function() {
     //Now I assume once this function is invoked, count++;
     
@@ -74,8 +87,6 @@ module.exports.run = async function() {
     try{
         var accounts = await getAccountsAsync();
         util_parity.unlockAccountsIfNeeded(web3, accounts, passwords);
-        //send from a random account to a specific account
-        //var random = Math.floor(Math.random()*accounts.length);
         let tx = {
             from: from,
             to: to,
@@ -83,7 +94,8 @@ module.exports.run = async function() {
         }
         var time_create = Date.now();
         try{
-            var hash = await sendTransactionAsync(tx);
+            //add await here and add .then() in the sendTransactionAsync to wait for the receipt
+            var hash = sendTransactionAsync(tx);
         }
         catch (err) {
             console.log(tx);
@@ -91,17 +103,6 @@ module.exports.run = async function() {
             console.log("Error happened in sendTx.run. " + err);
         }
         var time_final = Date.now();
-        //console.log("time_create: " + time_create + " time_end: " + time_end);
-
-        //getTrarnsactionReceipt function is not working...
-        //var receipt = await getTransactionAsync(hash);
-
-        /*
-        TODO, remember to move this part to parity.js file
-        if(contx.engine) {
-            contx.engine.submitCallback(1);
-        }
-        */
         let result = {
             hash : hash,
             status : hash ? 'success' : 'fail',
@@ -118,6 +119,63 @@ module.exports.run = async function() {
 }
 
 
+/**
+ *  sendSignedTransaction version run
+ *
+
+module.exports.run = async function() {
+    //Now I assume once this function is invoked, count++;
+    
+    if(contx.engine) {
+        contx.engine.submitCallback(1);
+    }
+    
+    try{
+        var accounts = await getAccountsAsync();
+        // For now I use the first account for testing use
+        var privateKeys = config.parity.network.privateKeys;
+        var privateKey = new Buffer(privateKeys[0], 'hex');
+
+        var time_create = Date.now();
+        try{
+            var rawTx = {
+                nonce: 13,
+                gasPrice: 0,
+                gasLimit: 10000000,
+                to: accounts[1],
+                value: 0
+                };
+            const tx = new Tx(rawTx);
+            //console.log(privateKeys[0]);
+            tx.sign(privateKey);
+            var serializedTx = tx.serialize();
+            var hash = await sendSignedTransactionAsync('0x' + serializedTx.toString('hex'));
+            
+        }
+        catch (err) {
+           // console.log(tx);
+            //console.log("what is the hash " + hash);
+            console.log("Error happened in sendTx.run. " + err);
+        }
+        var time_final = Date.now();
+        let result = {
+            hash : hash,
+            status : hash ? 'success' : 'fail',
+            time_create : time_create,
+            time_final : time_final
+        }
+        //console.log(result);
+        return result;
+    }
+    catch(err) {
+        console.log("Error happened in sendTx.js " + err);
+        throw err;
+    }
+}
+
+*/
+
+
 module.exports.end = function(results) {
     return Promise.resolve();
 };
@@ -127,7 +185,8 @@ module.exports.end = function(results) {
 /**
  * Unit Test
  * 
-*/
+
+
 async function test() {
     console.log("I'm in the test function");
     web3 = new Web3();
@@ -138,23 +197,34 @@ async function test() {
     let sendtx = require('./sendTx.js');
     var accounts = await getAccountsAsync();
     var privateKeys = config.parity.network.privateKeys;
-    web3.eth.getTransactionCount(accounts[0], function (err, nonce) {
-        //var data = web3.eth.contract(abi).at(address).increment.getData();
-    
-        var tx = new ethereumjs.Tx({
-          nonce: nonce,
-          gasPrice: 930000,
-          gasLimit: 10000000,
-          to: accounts[1],
-          value: 1000000000000000000
-        });
-        tx.sign(ethereumjs.Buffer.Buffer.from(privateKeys[0], 'hex'));
-    
-        var raw = '0x' + tx.serialize().toString('hex');
-        web3.eth.sendRawTransaction(raw, function (err, transactionHash) {
-          console.log(transactionHash);
-        });
-    });
+    var privateKey = new Buffer(privateKeys[0], 'hex');
+    for(var i=0;i<10;i++){
+
+        //web3.eth.getTransactionCount(accounts[0], function (err, nonce) {
+            //var data = web3.eth.contract(abi).at(address).increment.getData();
+            var rawTx = {
+            nonce: i+1,
+            gasPrice: 0,
+            gasLimit: 10000000,
+            to: accounts[1],
+            value: 0
+            };
+            const tx = new Tx(rawTx);
+            //console.log(privateKeys[0]);
+            tx.sign(privateKey);
+            var serializedTx = tx.serialize();
+            web3.eth.sendSignedTransaction('0x' + serializedTx.toString('hex'), function(err, hash) {
+                if(!err){
+                    console.log(hash);
+                }
+                else{
+                    console.log("ERROR");
+                }
+            });
+            //tx.sign(ethereumjs.Buffer.Buffer.from(privateKeys[0], 'hex'));
+
+        //});
+    }
 
 
 
@@ -162,7 +232,7 @@ async function test() {
 
     //onsole.log(web3.eth.currentProvider);
     //passwords = config.parity.network.passwords;
-    //sendtx.run();
+    //sendtx.run();y
 
 
 
@@ -170,3 +240,4 @@ async function test() {
 }
 test();
 
+*/
