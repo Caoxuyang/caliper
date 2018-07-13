@@ -9,13 +9,13 @@
         "description" : "Benchmark for local parity private chain scenario",
         "clients": {
           "type": "local",
-          "number": 1
+          "number": 5
         },
     "rounds": [{
           "label" : "sendTx",
           "txNumber" : [10],
           "arguments": {"amount": "0","from": "0x00d695cD9B0fF4edc8CE55b493AEC495B597e235","to": "0x00CB25f6fD16a52e24eDd2c8fd62071dc29A035c"},
-          "rateControl" : [{"type": "fixed-rate", "opts": {"tps" : 10}}],
+          "rateControl" : [{"type": "fixed-rate", "opts": {"tps" : 50}}],
           "callback" : "benchmark/parity_test/sendTx.js"
         }]
       },

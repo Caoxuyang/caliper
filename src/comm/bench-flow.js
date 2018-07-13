@@ -134,7 +134,6 @@ function printResultsByRound() {
     }
     log('###all test results:###');
     printTable(resultsbyround);
-
     report.setSummaryTable(resultsbyround);
 }
 

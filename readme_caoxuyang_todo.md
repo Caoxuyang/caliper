@@ -1,6 +1,11 @@
 ### Dependency
 1. Parity
 2. Web3.js
+3. ethereum-js
+4. rlp
+
+
+
 windows安装web3.js报错，npm设置教程：https://github.com/nodejs/node-gyp/issues/629#issuecomment-153196245
 
 debug log:
@@ -50,3 +55,8 @@ Solution: edit the spec file according to this website: https://github.com/parit
 2. TODO
 
 The tps is always around 10, I'm still trying to find why. (Manager thinks the problem is in the code)
+
+Done, the problem is from getAccount, now it;s done;
+
+3. 发送交易发多了会失败。
+解决了问题，web3.js的函数sendSignedTransaction太烂了， 我去查了底层函数自己写了一个发送交易。因为原来的函数，本地做了哈希之后，还要取得结果，轮询很久导致服务器端崩溃。

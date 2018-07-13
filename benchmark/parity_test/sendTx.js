@@ -1,17 +1,21 @@
 'use strict';
 const Web3 = require('web3');
 const util_parity = require('../../src/parity/util.js');
+const util = require('../../src/comm/util.js');
 const config = require('./parity.json');
 const Tx = require('ethereumjs-tx');
+const fs = require('fs');
 module.exports.info  = 'sending eth between accounts';
 
 let bc, contx;
 let value = 100; //Default tx amount
 let from,to;
-let web3;
+let web3 = new Web3();
 let passwords = [];
+let startTime;
+var startBlockNumber;
 
-module.exports.init = function(blockchain, context, args) {
+module.exports.init = async function(blockchain, context, args) {
     bc      = blockchain;
     contx   = context;
 
@@ -27,52 +31,24 @@ module.exports.init = function(blockchain, context, args) {
         //console.log(args.to);
         to = args.to;
     }
-
-    web3 = new Web3();
+    //web3 = new Web3();
     let url = config.parity.network.rpc.url;
     if(!web3.currentProvider) {
         web3 = new Web3(url);
     }
-    //onsole.log(web3.eth.currentProvider);
+    var accounts = await getAccountsAsync();
     passwords = config.parity.network.passwords;
-
+    util_parity.unlockAccountsIfNeeded(web3, accounts, passwords);
+    if(!startBlockNumber){
+        startBlockNumber = await _getBlockNumberAsync();
+        fs.writeFile("./startBlockNumber.txt", startBlockNumber, () => {});
+    }
+    if(!startTime){
+        startTime = Date.now();
+    }
+    //console.log("startBlockNumber ",startBlockNumber);
     return Promise.resolve();
 };
-
-function getAccountsAsync() {
-    return new Promise((res, rej) => {
-        web3.eth.getAccounts((err, result) =>{
-            !err ? res(result) : rej(err);
-        })
-    });
-}
-
-function sendTransactionAsync(transactionObject) {
-    return new Promise((res, rej) => {
-        web3.eth.sendTransaction(transactionObject, (err, transactionHash) => {
-            !err ? res(transactionHash) : rej(err);
-        });
-    });
-}
-
-function sendSignedTransactionAsync(transactionObject) {
-    return new Promise((res, rej) => {
-        web3.eth.sendSignedTransaction(transactionObject, function(err, transactionHash) {
-            !err ? res(transactionHash) : rej(err);
-        });
-    })
-}
-/*
-function getTransactionAsync(hashString) {
-    return new Promise((res, rej) => {
-        web3.eth.getTransaction(hashString, (err, receipt) => {
-            !err ? res(receipt) : rej(err);
-        });
-    });
-}
-*/
-
-
 
 /**
  *  sendTransaction version run
@@ -85,8 +61,7 @@ module.exports.run = async function() {
     }
     
     try{
-        var accounts = await getAccountsAsync();
-        util_parity.unlockAccountsIfNeeded(web3, accounts, passwords);
+        
         let tx = {
             from: from,
             to: to,
@@ -95,17 +70,18 @@ module.exports.run = async function() {
         var time_create = Date.now();
         try{
             //add await here and add .then() in the sendTransactionAsync to wait for the receipt
-            var hash = sendTransactionAsync(tx);
+            var hash = await sendTransactionAsync(tx);
+            //console.log(hash);
         }
         catch (err) {
-            console.log(tx);
-            console.log("what is the hash " + hash);
+            //console.log(tx);
+            //console.log("what is the hash " + hash);
             console.log("Error happened in sendTx.run. " + err);
         }
         var time_final = Date.now();
         let result = {
             hash : hash,
-            status : hash ? 'success' : 'fail',
+            status: hash ? 'success' : 'fail',
             time_create : time_create,
             time_final : time_final
         }
@@ -176,12 +152,107 @@ module.exports.run = async function() {
 */
 
 
-module.exports.end = function(results) {
+module.exports.end = async function(results) {
     return Promise.resolve();
 };
 
 
 
+function getBlockTransactionCountAsync(blockNumber) {
+    return new Promise((res, rej) => {
+        web3.eth.getBlockTransactionCount(blockNumber, function(err, txCount) {
+            !err ? res(txCount) : rej(err);
+        });
+    })
+}
+
+function getBlockAsync(blockNumber) {
+    return new Promise((res, rej) => {
+        web3.eth.getBlock(blockNumber, function(err, block) {
+            !err ? res(block) : rej(err);
+        });
+    })
+}
+
+
+function getAccountsAsync() {
+    return new Promise((res, rej) => {
+        web3.eth.getAccounts((err, result) =>{
+            !err ? res(result) : rej(err);
+        })
+    });
+}
+
+function sendTransactionAsync(transactionObject) {
+    return new Promise((res, rej) => {
+        web3.eth.sendTransaction(transactionObject, (err, transactionHash) => {
+            !err ? res(transactionHash) : rej(err);
+        });
+    });
+}
+
+function sendSignedTransactionAsync(transactionObject) {
+    return new Promise((res, rej) => {
+        web3.eth.sendSignedTransaction(transactionObject, function(err, transactionHash) {
+            !err ? res(transactionHash) : rej(err);
+        });
+    })
+}
+
+function _getBlockNumberAsync (){
+    return new Promise((res, rej) => {
+        web3.eth.getBlockNumber((err, numb) => {
+            !err ? res(numb) : rej(err);
+        });
+    });
+}
+
+/* Not used for now*/
+function getTransactionReceiptAsync (hash) {
+    return new Promise((res, rej) => {
+        web3.eth.getTransactionReceipt((err, receipt) => {
+            !err ? res(receipt) : rej(err);
+        })
+    })
+}
+
+/* Not used for now*/
+module.exports.getBlockNumberAsync = async function() {
+    return new Promise((res, rej) => {
+        web3.eth.getBlockNumber((err, numb) => {
+            !err ? res(numb) : rej(err);
+        });
+    });
+}
+
+
+/**
+ *  For now I didn't implement this
+ */
+module.exports.calculateTpsUsingBlock = async function() {
+    var block = startBlockNumber + 1;
+    var endTime;
+    var txs = 0;
+    while(true) {
+        var temp = await getBlockTransactionCountAsync(block);
+        if(temp){
+            txs += temp;
+            console.log("The block number is ", block," and the transaction count is ", temp);
+            console.log("Total txs is ", txs);
+            endTime = await getBlockAsync(block).timestamp;
+            console.log("starttime ", startTime);
+            block++;
+        }
+        else{
+            break;
+        }
+    }
+}
+
+module.exports.getStartBlockNumber = function() {
+    console.log(startBlockNumber, this.startBlockNumber);
+    return startBlockNumber;
+}
 /**
  * Unit Test
  * 
@@ -194,10 +265,15 @@ async function test() {
     if(!web3.currentProvider) {
         web3 = new Web3(url);
     }
-    let sendtx = require('./sendTx.js');
+    //let sendtx = require('./sendTx.js');
     var accounts = await getAccountsAsync();
     var privateKeys = config.parity.network.privateKeys;
     var privateKey = new Buffer(privateKeys[0], 'hex');
+    //var numb = await getBlockNumberAsync();
+
+
+
+    //console.log("!!!!!!!!!!!!!!!!!!!!!",numb);
     for(var i=0;i<10;i++){
 
         //web3.eth.getTransactionCount(accounts[0], function (err, nonce) {
@@ -224,16 +300,23 @@ async function test() {
             //tx.sign(ethereumjs.Buffer.Buffer.from(privateKeys[0], 'hex'));
 
         //});
+
+        
     }
 
 
+    passwords = config.parity.network.passwords;
+    util_parity.unlockAccountsIfNeeded(web3, accounts, passwords);
 
-    //util_parity.unlockAccountsIfNeeded(web3, accounts, passwords);
-
-    //onsole.log(web3.eth.currentProvider);
-    //passwords = config.parity.network.passwords;
-    //sendtx.run();y
-
+    for(var i=0;i<1000;i++) {
+        let tx = {
+            from: "0x00d695cD9B0fF4edc8CE55b493AEC495B597e235",
+            to: "0x00CB25f6fD16a52e24eDd2c8fd62071dc29A035c",
+            value: 0
+        }
+        sendTransactionAsync(tx);
+    }
+    
 
 
 

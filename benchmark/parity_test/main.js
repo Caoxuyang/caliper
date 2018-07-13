@@ -25,7 +25,7 @@ function setNetwork(file) {
 /**
  * Entry point of the Benchmarking script.
  */
-function main() {
+async function main() {
     let program = require('commander');
     program.version('0.1')
         .option('-c, --config <file>', 'config file of the benchmark, default is config.json', setConfig)
@@ -68,13 +68,11 @@ function main() {
 
 
     const framework = require('../../src/comm/bench-flow.js');
-    framework.run(absConfigFile, absNetworkFile);
+    return framework.run(absConfigFile, absNetworkFile);
+    
 }
 
 main();
-
-
-
 
 
 

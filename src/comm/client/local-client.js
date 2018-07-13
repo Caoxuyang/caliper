@@ -76,23 +76,6 @@ function beforeTest() {
 function submitCallback(count) {
     txNum += count;
 }
-/*
-//async recursive send tx
-function generateRunPromise(cb, rateControl, start, txNum, results)
-{
-    return cb.run().then((result, err)=>{
-        addResult(result);
-        return rateControl.applyRateControl(start, txNum, results);
-    }).catch((err) => {
-        if (err) {
-            console.error(err);
-            console.error("Retry send tx.");
-            //TODO here needs a retry control, in case of stack overflow
-            return generateRunPromise(cb, rateControl, start, txNum, results);
-        }
-    });
-}
-*/
 
 /**
  * Perform test with specified number of transactions
@@ -110,33 +93,21 @@ async function runFixedNumber(msg, cb, context) {
     const start = Date.now();
 
     let promises = [];
-
+    //TODO: If a client failed to start, the program won't stop.
     while(txNum < msg.numb) {
         promises.push(new Promise((res, rej)=>{
             cb.run().then((result, err)=>{
                 addResult(result);
                 res(result);
-                // If I put this inside, I can't control the rate
-                //return rateControl.applyRateControl(start, txNum, results);
             }).catch((err) => {
                 console.error(err);
                 console.error("send tx failed in runFixedNumber function");
                 rej(err);
-                //TODO I think here needs a retry or retry control, in case of stack overflow
             })
         } ));
-        await rateControl.applyRateControl(start, txNum, results);
-        /*
-        promises.push((await cb.run()).then((result) => {
-            console.log(result);
-            addResult(result);
-            return Promise.resolve();
-        }));
-        */
-        //console.log("What's the parameters " + start + " " + txNum + " " + results);
-        
+        // control the sending rate
+        await rateControl.applyRateControl(start, txNum, results);    
     }
-    //console.log("start promises, ", promises.length);
     await Promise.all(promises);
     await rateControl.end();
     //cb.end();
@@ -231,7 +202,7 @@ function doTest(msg) {
             let safeCut = (2 * trim) < results.length ? trim : results.length;
             results = results.slice(safeCut, results.length - safeCut);
         }
-
+        //console.log(blockchain, blockchain.getDefaultTxStats(results, true));
         let stats = blockchain.getDefaultTxStats(results, true);
         return Promise.resolve(stats);
     }).catch((err) => {

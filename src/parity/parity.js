@@ -1,9 +1,9 @@
 'use strict';
 
-// leave for requires ->
 const Web3 = require('web3');
 const BlockchainInterface = require('../comm/blockchain-interface.js');
 const util_parity = require('./util.js');
+const sendTx = require('../../benchmark/parity_test/sendTx.js');
 let web3;
 /**
  * Implements {BlockchainInterface} for a Parity backend.
@@ -50,12 +50,15 @@ class Parity extends BlockchainInterface{
 
     /**
      * Release a context as well as related resources
-     * Nothing to do right now
+     * After all the transactions are mined, print the block info and txs in them.
      * @param {Object} context adapter specific object
      */
     releaseContext(context) {
         return Promise.resolve();
     }
+
+    
+
 
     /**
      * Invoke a smart contract
@@ -79,8 +82,9 @@ class Parity extends BlockchainInterface{
         //TODO
         let clientArgs = [];
         for(var i=0;i<number;i++){
-            clientArgs[i] = "test";
+            clientArgs[i] = i;
         }
+        util_parity.writeStartBlock(this.configPath);
         return Promise.resolve(clientArgs);
     }
 
@@ -94,10 +98,21 @@ class Parity extends BlockchainInterface{
     queryState(context, contractID, contractVer, key) {
         return Promise.resolve();
     }
+
+    /**
+     * Get adapter specific transaction statistics
+     * @param {JSON} stats txStatistics object
+     * @param {Array} results array of txStatus objects
+     */
+    getDefaultTxStats(stats, results) {
+        for(let i = 0 ; i < results.length ; i++) {
+            let stat = results[i];
+            console.log("!!!! im here");
+        }
+      
+    }
 }
 module.exports = Parity;
-
-
 
 
 
