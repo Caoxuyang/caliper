@@ -123,7 +123,7 @@ module.exports.calculate = async function() {
                         break;
                     }
                     if(!block){
-                        sleep(1000);
+                        sleep(500);
                     }
                     else{
                         var count = block.transactions.length;
