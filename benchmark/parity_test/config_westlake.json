@@ -9,14 +9,14 @@
         "description" : "Benchmark for westlake chain scenario",
         "clients": {
           "type": "local",
-          "number": 1
+          "number": 20
         },
     "rounds": [{
           "label" : "sendRawTx",
-          "txNumber" : [1],
-          "arguments": {"txsPerClient" : 1, "maxSocketsPerClient":100},
-          "rateControl" : [{"type": "fixed-rate", "opts": {"tps" : 0}}],
-          "callback" : "benchmark/parity_test/testSendRawTx.js"
+          "txNumber" : [300000],
+          "arguments": {"txsPerClient" : 15000, "maxSocketsPerClient":200},
+          "rateControl" : [{"type": "fixed-rate", "opts": {"tps" : 8000}}],
+          "callback" : "benchmark/parity_test/sendRawTx.js"
         }]
       },
       "monitor": {
