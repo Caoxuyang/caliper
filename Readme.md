@@ -82,7 +82,7 @@ As for the **network file**, it's very simple for now. Just two parameters to be
 - RPC target address --- < url : port >. e.g. http://1.2.3.4:8540
 - Target chain id (This is for parity and ethereum only for now, this will reduce half of the web requests. Requests won't need to query net_version anymore.)
 
-After setting the config files, just simply run ---   node main.js -c <your benchmark config file> -n <your network config file>
+After setting the config files, just simply run ---   node main.js -c your_benchmark_config_file -n your_network_config_file
 
 ### About TPS Calculation
 
@@ -95,7 +95,7 @@ Since we need to send very large number of txs to test the network. So I tried m
 
 But I provided a more accurate way to get the TPS result.
 
-After all the txs are mined, simply run ---  node main_calTps.js -c <your benchmark config file> -n <your network config file>.  This function will get the txs that are successfully mined from the very beginning block of your test to the last block and calculate the TPS based on timestamp.
+After all the txs are mined, simply run ---  node main_calTps.js -c your_benchmark_config_file -n your_network_config_file.  This function will get the txs that are successfully mined from the very beginning block of your test to the last block and calculate the TPS based on timestamp.
 
 
 
