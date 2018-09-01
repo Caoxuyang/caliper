@@ -1,0 +1,34 @@
+{
+    "blockchain": {
+        "type": "parity",
+        "config": "benchmark/parity_test/westlake.json"
+      },
+      
+    "test": {
+        "name": "westlake remote rpc test",
+        "description" : "Benchmark for westlake chain scenario",
+        "clients": {
+          "type": "local",
+          "number": 1
+        },
+    
+    "rounds": [{
+          "label" : "send raw transaction to contracts",
+          "txNumber" : [100],
+          "arguments": {"txsPerClient" : 100, "maxSocketsPerClient":200},
+          "rateControl" : [{"type": "fixed-rate", "opts": {"tps" : 6000}}],
+          "callback" : "benchmark/parity_test/sendRawTx.js"
+        }]
+  },
+    "monitor": {
+      "type": ["process"],
+      "process": [
+        {
+          "command" : "node",
+          "arguments" : "local-client.js",
+          "multiOutput" : "avg"
+        }
+      ],
+      "interval": 1
+    }
+}
