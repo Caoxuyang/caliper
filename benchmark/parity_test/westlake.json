@@ -2,7 +2,7 @@
     "parity": {
         "network": {
             "rpc": {
-                "url": "http://168.63.253.116:3100",
+                "url": "http://xyreserve.blockchain.ppe.azure-int.net:3100",
                 "chainId": "100"
             }
         }

@@ -1,4 +1,4 @@
-{
+{ 
     "blockchain": {
         "type": "parity",
         "config": "benchmark/parity_test/westlake.json"
@@ -9,14 +9,14 @@
         "description" : "Benchmark for westlake chain scenario",
         "clients": {
           "type": "local",
-          "number": 1
+          "number": 2
         },
     
     "rounds": [{
-          "label" : "send raw transaction to contracts",
-          "txNumber" : [100],
-          "arguments": {"txsPerClient" : 100, "maxSocketsPerClient":200},
-          "rateControl" : [{"type": "fixed-rate", "opts": {"tps" : 6000}}],
+          "label" : "send raw transaction",
+          "txNumber" : [1000],
+          "arguments": {"txsPerClient" : 500, "maxSocketsPerClient":200},
+          "rateControl" : [{"type": "fixed-rate", "opts": {"tps" : 5000}}],
           "callback" : "benchmark/parity_test/sendRawTx.js"
         }]
   },

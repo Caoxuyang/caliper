@@ -20,6 +20,7 @@ let txNum        = 0;
 let txLastNum    = 0;
 let txUpdateTail = 0;
 let txUpdateTime = 1000;
+let startTime = 0;
 
 /**
  * Calculate realtime transaction statistics and send the txUpdated message
@@ -90,10 +91,10 @@ async function runFixedNumber(msg, cb, context) {
     rateControl.init(msg);
 
     await cb.init(blockchain, context, msg.args);
-    const start = Date.now();
+    startTime = Date.now();
 
     let promises = [];
-    //TODO: If a client failed to start, the program won't stop.
+    /*
     while(txNum < msg.numb) {
         promises.push(new Promise((res, rej)=>{
             cb.run().then((result, err)=>{
@@ -108,9 +109,16 @@ async function runFixedNumber(msg, cb, context) {
         // control the sending rate
         await rateControl.applyRateControl(start, txNum, results);    
     }
+    */
+    while(txNum < msg.numb) {
+        promises.push(cb.run().then((result) => {
+            addResult(result);
+            return Promise.resolve();
+        }));
+        await rateControl.applyRateControl(startTime, txNum, results);
+    }
     await Promise.all(promises);
     await rateControl.end();
-    //cb.end();
     return await blockchain.releaseContext(context);
 }
 
